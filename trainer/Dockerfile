@@ -1,4 +1,4 @@
-FROM unsloth/unsloth:v2025.03
+FROM unsloth/unsloth:stable
 
 WORKDIR /app
 
