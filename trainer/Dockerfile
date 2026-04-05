@@ -1,6 +1,16 @@
-FROM unsloth/unsloth:stable
+FROM python:3.11-slim
 
 WORKDIR /app
+
+# Install system deps for CUDA/PyTorch
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install PyTorch with CUDA 12.1 support
+RUN pip install --no-cache-dir \
+    torch torchvision --index-url https://download.pytorch.org/whl/cu121
 
 # Install Python dependencies
 COPY requirements.txt .
