@@ -7,7 +7,7 @@ version: "2.0"
 services:
   # Forge Frontend — PWA static hosting (CPU only)
   forge-frontend:
-    image: ghcr.io/toxmon/forge-frontend:10536ab
+    image: ghcr.io/toxmon/forge-frontend:a762cc6
     expose:
       - port: 3000
         as: 80
@@ -28,7 +28,7 @@ services:
 
   # Forge Trainer — LoRA training + GGUF merge (GPU)
   forge-trainer:
-    image: ghcr.io/toxmon/forge-trainer:10536ab
+    image: ghcr.io/toxmon/forge-trainer:a762cc6
     expose:
       - port: 5000
         to:
