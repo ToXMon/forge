@@ -32,12 +32,9 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: ./pwa
-          platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
       - name: Make package public
         env:
           GHCR_TOKEN: ${{ secrets.GHCR_PAT }}
@@ -47,7 +44,7 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             -H "Content-Type: application/json" \
             -d '{"visibility":"public"}' \
-            "https://api.github.com/user/packages/container/forge-frontend/visibility" || echo "WARN: Could not make public via API"
+            "https://api.github.com/user/packages/container/${{ steps.owner.outputs.owner }}%2Fforge-frontend/visibility" || echo "WARN: Could not make public via API"
 
   build-trainer:
     runs-on: ubuntu-latest
@@ -73,12 +70,9 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: ./trainer
-          platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
       - name: Make package public
         env:
           GHCR_TOKEN: ${{ secrets.GHCR_PAT }}
@@ -88,4 +82,4 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             -H "Content-Type: application/json" \
             -d '{"visibility":"public"}' \
-            "https://api.github.com/user/packages/container/forge-trainer/visibility" || echo "WARN: Could not make public via API"
+            "https://api.github.com/user/packages/container/${{ steps.owner.outputs.owner }}%2Fforge-trainer/visibility" || echo "WARN: Could not make public via API"
