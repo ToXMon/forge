@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#f97316">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Forge">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="description" content="Train personal AI adapters for fractions of a cent. Run 100% locally.">
+  <link rel="icon" href="/icons/icon.svg">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <title>Forge — Sovereign Mobile AI</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/chat.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "wllama": "https://cdn.jsdelivr.net/npm/wllama@1.16.1/esm/index.js",
+      "wllama/esm/": "https://cdn.jsdelivr.net/npm/wllama@1.16.1/esm/"
+    }
+  }
+  </script>
+</head>
+<body>
+<div class="app-container">
+  <header class="header">
+    <h1><span>🔨</span><span>Forge</span></h1>
+    <div class="header-actions">
+      <button class="btn-install" id="installBtn">Install</button>
+    </div>
+  </header>
+  <main class="main-content">
+    <!-- FORGE VIEW -->
+    <div class="view active" id="forgeView">
+      <div class="badge-row">
+        <span class="badge badge-mit">MIT</span>
+        <span class="badge badge-akash">Built on Akash</span>
+      </div>
+      <div class="cost-hero">
+        <span class="cost-amount">$0.00015</span>
+        <span class="cost-label">per training session</span>
+      </div>
+      <div class="card cost-table">
+        <h3>Cost Comparison</h3>
+        <table>
+          <tr><th>Platform</th><th>Cost</th></tr>
+          <tr><td>AWS SageMaker</td><td>$2.45</td></tr>
+          <tr><td>RunPod</td><td>$0.37</td></tr>
+          <tr><td>Forge (Akash)</td><td>$0.00015</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Training Data</h3>
+        <div class="file-drop" id="fileDrop">
+          <input type="file" id="fileInput" accept=".jsonl">
+          <p>Drop .jsonl file or tap to upload</p>
+          <p class="file-name" id="fileName"></p>
+        </div>
+        <label class="form-label">Or paste JSONL</label>
+        <textarea class="form-input" id="jsonlPaste" rows="3" placeholder='[{"role":"user","content":"..."}]'></textarea>
+      </div>
+      <div class="card">
+        <h3>Configuration</h3>
+        <label class="form-label">Adapter Name</label>
+        <input class="form-input" id="adapterName" placeholder="my-persona">
+        <label class="form-label">Trainer Endpoint</label>
+        <input class="form-input mono" id="trainerUrl" placeholder="https://your-trainer.akash.network">
+        <div class="config-grid">
+          <div class="form-group">
+            <label class="form-label">LoRA r</label>
+            <input class="form-input" id="loraR" value="64" type="number">
+          </div>
+          <div class="form-group">
+            <label class="form-label">LoRA α</label>
+            <input class="form-input" id="loraAlpha" value="64" type="number">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Epochs</label>
+            <input class="form-input" id="epochs" value="3" type="number">
+          </div>
+          <div class="form-group">
+            <label class="form-label">LR</label>
+            <input class="form-input" id="lr" value="0.0001" type="number" step="0.00001">
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" id="forgeBtn">🔨 Forge Adapter</button>
+      <div id="progressSection" style="display:none">
+        <div class="card">
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress-stats">
+            <span>Epoch <span class="mono" id="epochInfo">0/3</span></span>
+            <span>Loss <span class="mono" id="lossInfo">-</span></span>
+            <span>Cost <span class="mono" id="costInfo">$0.00015</span></span>
+          </div>
+        </div>
+        <button class="btn-primary" id="downloadBtn" style="display:none">⬇️ Download to Phone</button>
+      </div>
+    </div>
+    <!-- POCKET VIEW -->
+    <div class="view" id="pocketView">
+      <div class="offline-badge">100% LOCAL • OFFLINE</div>
+      <div class="persona-info-bar" id="personaBar" style="display:none">
+        <span class="status-dot" id="modelStatus"></span>
+        <span id="personaName">No persona loaded</span>
+      </div>
+      <div class="pocket-layout" id="pocketLayout">
+        <div class="chat-container" id="chatContainer">
+          <div class="welcome-msg" id="welcomeMsg">
+            <h3>Pocket AI</h3>
+            <p>Load a persona from Personas tab to start chatting 100% locally.</p>
+          </div>
+        </div>
+        <div class="chat-input-area" id="chatInputArea" style="display:none">
+          <textarea id="chatInput" rows="1" placeholder="Type a message..."></textarea>
+          <button class="btn-send" id="sendBtn">➤</button>
+        </div>
+        <div class="chat-stats" id="chatStats" style="display:none">
+          <span>Msgs: <span class="mono" id="msgCount">0</span></span>
+          <span>Speed: <span class="mono" id="tokSpeed">-</span></span>
+          <span>Mode: <span class="mono">Local</span></span>
+        </div>
+      </div>
+    </div>
+    <!-- PERSONAS VIEW -->
+    <div class="view" id="personasView">
+      <div class="view-header"><h2>👥 Personas</h2></div>
+      <div id="personasList"></div>
+      <div class="empty-state" id="personasEmpty">
+        <p>No personas yet.</p>
+        <a id="goForge">Forge one →</a>
+      </div>
+    </div>
+  </main>
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-view="forgeView">
+      <span class="nav-icon">🔨</span><span>Forge</span>
+    </button>
+    <button class="nav-item" data-view="pocketView">
+      <span class="nav-icon">📱</span><span>Pocket</span>
+    </button>
+    <button class="nav-item" data-view="personasView">
+      <span class="nav-icon">👥</span><span>Personas</span>
+    </button>
+  </nav>
+</div>
+<script src="/js/db.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/forge.js"></script>
+<script src="/js/personas.js"></script>
+<script type="module" src="/js/pocket.js"></script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+# ─────────────────────────────────────────────
+# Akash SDL — Forge (Phase 1: Frontend + Trainer)
+# Decentralized LoRA forge for sovereign mobile AI
+# ─────────────────────────────────────────────
+version: "2.0"
+
+services:
+  # Forge Frontend — PWA static hosting (CPU only)
+  forge-frontend:
+    image: ghcr.io/toxmon/forge-frontend:SHA_PLACEHOLDER
+    expose:
+      - port: 3000
+        as: 80
+        to:
+          - global: true
+        http_options:
+          max_body_size: 104857600
+          read_timeout: 30000
+          send_timeout: 30000
+          next_cases:
+            - error
+            - timeout
+            - "502"
+            - "503"
+            - "504"
+    env:
+      - TRAINER_URL=http://forge-trainer:5000
+
+  # Forge Trainer — LoRA training + GGUF merge (GPU)
+  forge-trainer:
+    image: ghcr.io/toxmon/forge-trainer:SHA_PLACEHOLDER
+    expose:
+      - port: 5000
+        to:
+          - service: forge-frontend
+    env:
+      - BASE_MODEL=unsloth/Qwen2.5-7B-Instruct-bnb-4bit
+      - LORA_R=64
+      - LORA_ALPHA=64
+      - LORA_TARGETS=q_proj,k_proj,v_proj,o_proj
+      - NUM_EPOCHS=3
+      - LEARNING_RATE=1e-4
+      - GGUF_QUANTIZATION=q4_k_m
+
+profiles:
+  compute:
+    forge-frontend:
+      resources:
+        cpu:
+          units: 0.5
+        memory:
+          size: 512Mi
+        storage:
+          size: 1Gi
+    forge-trainer:
+      resources:
+        cpu:
+          units: 2
+        memory:
+          size: 16Gi
+        storage:
+          size: 20Gi
+        gpu:
+          units: 1
+          attributes:
+            vendor:
+              nvidia:
+                - model: rtx4090
+                - model: rtx4080
+                - model: rtx3090
+                - model: a100
+                - model: h100
+
+  placement:
+    akash:
+      pricing:
+        forge-frontend:
+          denom: uact
+          amount: 1000
+        forge-trainer:
+          denom: uact
+          amount: 20000
+
+deployment:
+  forge-frontend:
+    akash:
+      profile: forge-frontend
+      count: 1
+  forge-trainer:
+    akash:
+      profile: forge-trainer
+      count: 1
